@@ -6,7 +6,7 @@ import java.util.ArrayList;
 public class Snake extends JDialog {
     private JPanel contentPane;
     private JButton restart;
-    private JLabel scoreL, highscoreL, info;
+    private JLabel scoreL, highScoreL, info;
     private JButton up, down, left, right;
     private JPanel r0c0, r0c1, r0c2, r0c3, r0c4, r0c5, r0c6, r0c7, r0c8, r0c9;
     private JPanel r1c0, r1c1, r1c2, r1c3, r1c4, r1c5, r1c6, r1c7, r1c8, r1c9;
@@ -24,8 +24,8 @@ public class Snake extends JDialog {
     private final JPanel[][] board = new JPanel[height][width];
     private final ArrayList<int[]> snake = new ArrayList<>();
     private final int[] apple = new int[2];
-    private int[] lastLOfSnake = new int[2];
-    private int score = 0, highscore = 0, nextDirection = 0;
+    private int[] lastL = new int[2];
+    private int score = 0, highScore = 0, nextDirection = 0;
 
     public Snake() {
         setContentPane(contentPane);
@@ -50,74 +50,25 @@ public class Snake extends JDialog {
     }
 
     public void createEventListener() {
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        contentPane.registerKeyboardAction(e -> dispose(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                move(1);
-                //System.out.println("UP");
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        contentPane.registerKeyboardAction(e -> move(1), KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                move(2);
-                //System.out.println("DOWN");
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        contentPane.registerKeyboardAction(e -> move(2), KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                move(3);
-                //System.out.println("LEFT");
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        contentPane.registerKeyboardAction(e -> move(3), KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                move(4);
-                //System.out.println("RIGHT");
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        contentPane.registerKeyboardAction(e -> move(4), KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-        restart.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                restart();
-            }
-        });
+        restart.addActionListener(e -> restart());
 
-        up.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                move(1);
-            }
-        });
+        up.addActionListener(e -> move(1));
 
-        down.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                move(2);
-            }
-        });
+        down.addActionListener(e -> move(2));
 
-        left.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                move(3);
-            }
-        });
+        left.addActionListener(e -> move(3));
 
-        right.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                move(4);
-            }
-        });
+        right.addActionListener(e -> move(4));
     }
 
     public void createBoard() {
@@ -298,9 +249,9 @@ public class Snake extends JDialog {
     public void endScreen() {
         nextDirection = -1;
         info.setText("Game Over!");
-        if (score > highscore) {
-            highscore = score;
-            highscoreL.setText("Highscore: " + highscore);
+        if (score > highScore) {
+            highScore = score;
+            highScoreL.setText("Highscore: " + highScore);
         }
     }
 
@@ -322,61 +273,57 @@ public class Snake extends JDialog {
             board[l2[0]][l2[1]].setBackground(cSnake);
         }
 
-        if (lastLOfSnake != null) {
-            if (lastLOfSnake[0]%2 == 0 && lastLOfSnake[1]%2 == 0 || lastLOfSnake[0]%2 == 1 && lastLOfSnake[1]%2 == 1) {
-                board[lastLOfSnake[0]][lastLOfSnake[1]].setBackground(cBoard1);
+        if (lastL != null) {
+            if (lastL[0]%2 == 0 && lastL[1]%2 == 0 || lastL[0]%2 == 1 && lastL[1]%2 == 1) {
+                board[lastL[0]][lastL[1]].setBackground(cBoard1);
             } else {
-                board[lastLOfSnake[0]][lastLOfSnake[1]].setBackground(cBoard2);
+                board[lastL[0]][lastL[1]].setBackground(cBoard2);
             }
         }
     }
 
     public void run() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
+        new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                if (nextDirection != 0 && nextDirection != -1) {
+                    int[] nextL = new int[2];
+                    int[] head = snake.get(0);
+                    nextL[0] = head[0];
+                    nextL[1] = head[1];
+                    switch (nextDirection) {
+                        case 1 -> nextL[0] -= 1;
+                        case 2 -> nextL[0] += 1;
+                        case 3 -> nextL[1] -= 1;
+                        case 4 -> nextL[1] += 1;
+                    }
+
+                    if (isSnake(nextL) || !isOnBoard(nextL)) {
+                        board[head[0]][head[1]].setBackground(cSnakeHeadDead);
+                        endScreen();
+                        continue;
+                    } else if (isApple(nextL)) {
+                        score += 1;
+                        scoreL.setText("Score: " + score);
+                        snake.add(0, nextL);
+                        lastL = null;
+                        placeApple();
+                    } else {
+                        snake.add(0, nextL);
+                        lastL = snake.get(snake.size() - 1);
+                        snake.remove(snake.size() - 1);
+                    }
+                    //draw
+                    draw();
+
                     try {
-                        Thread.sleep(1);
+                        Thread.sleep(400);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
-                    }
-                    if (nextDirection != 0 && nextDirection != -1) {
-                        int[] nextL = new int[2];
-                        int[] head = snake.get(0);
-                        nextL[0] = head[0];
-                        nextL[1] = head[1];
-                        switch (nextDirection) {
-                            case 1 -> nextL[0] -= 1;
-                            case 2 -> nextL[0] += 1;
-                            case 3 -> nextL[1] -= 1;
-                            case 4 -> nextL[1] += 1;
-                        }
-
-                        if (isSnake(nextL) || !isOnBoard(nextL)) {
-                            board[head[0]][head[1]].setBackground(cSnakeHeadDead);
-                            endScreen();
-                            continue;
-                        } else if (isApple(nextL)) {
-                            score += 1;
-                            scoreL.setText("Score: " + score);
-                            snake.add(0, nextL);
-                            lastLOfSnake = null;
-                            placeApple();
-                        } else {
-                            snake.add(0, nextL);
-                            int[] lastL = snake.get(snake.size() - 1);
-                            lastLOfSnake = lastL;
-                            snake.remove(snake.size() - 1);
-                        }
-                        //draw
-                        draw();
-
-                        try {
-                            Thread.sleep(400);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
                     }
                 }
             }
