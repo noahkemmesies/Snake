@@ -3,7 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 
-public class Snake extends JDialog implements Runnable {
+public class Snake extends JDialog {
     private JPanel contentPane;
     private JButton restart;
     private JLabel scoreL, highscoreL, info;
@@ -19,12 +19,12 @@ public class Snake extends JDialog implements Runnable {
     private JPanel r8c0, r8c1, r8c2, r8c3, r8c4, r8c5, r8c6, r8c7, r8c8, r8c9;
     private JPanel r9c0, r9c1, r9c2, r9c3, r9c4, r9c5, r9c6, r9c7, r9c8, r9c9;
 
-    private final Color cBoard1 = Color.GRAY, cBoard2 = Color.LIGHT_GRAY, cSnake = Color.BLUE, cSnakeHead = Color.BLUE, cSnakeHeadDead = Color.MAGENTA, cApple = Color.RED;
+    private final Color cBoard1 = Color.GRAY, cBoard2 = Color.LIGHT_GRAY, cSnake = Color.BLUE, cSnakeHead = Color.CYAN, cSnakeHeadDead = Color.MAGENTA, cApple = Color.RED;
     private final int height = 10, width = 10;
     private final JPanel[][] board = new JPanel[height][width];
     private final ArrayList<int[]> snake = new ArrayList<>();
     private final int[] apple = new int[2];
-    private int[] lastL = new int[2];
+    private int[] lastLOfSnake = new int[2];
     private int score = 0, highscore = 0, nextDirection = 0;
 
     public Snake() {
@@ -45,6 +45,7 @@ public class Snake extends JDialog implements Runnable {
 
         createEventListener();
         createBoard();
+        run();
         setVisible(true);
     }
 
@@ -253,7 +254,8 @@ public class Snake extends JDialog implements Runnable {
     public void move(int direction) { //0 = No movement; 1 = UP; 2 = DOWN; 3 = LEFT; 4 = RIGHT
         if (nextDirection == 0) {
             info.setText("");
-        } else if (nextDirection == -1) {
+        }
+        if (nextDirection == -1) {
             info.setText("Restart to play again!");
         } else {
             nextDirection = direction;
@@ -305,7 +307,9 @@ public class Snake extends JDialog implements Runnable {
     public void restart() {
         nextDirection = 0;
         score = 0;
+        snake.clear();
         fillBoard();
+        scoreL.setText("Score: 0");
         info.setText("Press an Arrow-Key");
     }
 
@@ -318,77 +322,70 @@ public class Snake extends JDialog implements Runnable {
             board[l2[0]][l2[1]].setBackground(cSnake);
         }
 
-        if (lastL != null) {
-            if (lastL[0]%2 == 0 && lastL[1]%2 == 0 || lastL[0]%2 == 1 && lastL[1]%2 == 1) {
-                board[lastL[0]][lastL[1]].setBackground(cBoard1);
+        if (lastLOfSnake != null) {
+            if (lastLOfSnake[0]%2 == 0 && lastLOfSnake[1]%2 == 0 || lastLOfSnake[0]%2 == 1 && lastLOfSnake[1]%2 == 1) {
+                board[lastLOfSnake[0]][lastLOfSnake[1]].setBackground(cBoard1);
             } else {
-                board[lastL[0]][lastL[1]].setBackground(cBoard2);
+                board[lastLOfSnake[0]][lastLOfSnake[1]].setBackground(cBoard2);
             }
         }
     }
 
-    @Override
     public void run() {
-        while (true) {
-            while (nextDirection == 0 || nextDirection == -1); //can be replaced with if
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    if (nextDirection != 0 && nextDirection != -1) {
+                        int[] nextL = new int[2];
+                        int[] head = snake.get(0);
+                        nextL[0] = head[0];
+                        nextL[1] = head[1];
+                        switch (nextDirection) {
+                            case 1 -> nextL[0] -= 1;
+                            case 2 -> nextL[0] += 1;
+                            case 3 -> nextL[1] -= 1;
+                            case 4 -> nextL[1] += 1;
+                        }
 
-            int[] nextL = new int[2];
-            int[] head = snake.get(0);
-            nextL[0] = head[0];
-            nextL[1] = head[0];
-            switch (nextDirection) {
-                case 1 -> nextL[0] -= 1;
-                case 2 -> nextL[0] += 1;
-                case 3 -> nextL[1] -= 1;
-                case 4 -> nextL[1] += 1;
-            }
-            /*
-            if (nextDirection == 1) {
-                nextL[0] = head[0] - 1;
-                nextL[1] = head[0];
-            }
-            if (nextDirection == 2) {
-                nextL[0] = head[0] + 1;
-                nextL[1] = head[0];
-            }
-            if (nextDirection == 3) {
-                nextL[0] = head[0];
-                nextL[1] = head[0] - 1;
-            }
-            if (nextDirection == 4) {
-                nextL[0] = head[0];
-                nextL[1] = head[0] + 1;
-            }*/
-            if (isSnake(nextL) || !isOnBoard(nextL)) {
-                board[nextL[0]][nextL[1]].setBackground(cSnakeHeadDead);
-                endScreen();
-                continue;
-            } else if (isApple(nextL)) {
-                score += 1;
-                snake.add(0, nextL);
-                this.lastL = null;
-                placeApple();
-            } else {
-                snake.add(0, nextL);
-                int[] lastL = snake.get(snake.size() -1);
-                this.lastL = lastL;
-                snake.remove(snake.size() -1);
-            }
-            //draw
-            draw();
+                        if (isSnake(nextL) || !isOnBoard(nextL)) {
+                            board[head[0]][head[1]].setBackground(cSnakeHeadDead);
+                            endScreen();
+                            continue;
+                        } else if (isApple(nextL)) {
+                            score += 1;
+                            scoreL.setText("Score: " + score);
+                            snake.add(0, nextL);
+                            lastLOfSnake = null;
+                            placeApple();
+                        } else {
+                            snake.add(0, nextL);
+                            int[] lastL = snake.get(snake.size() - 1);
+                            lastLOfSnake = lastL;
+                            snake.remove(snake.size() - 1);
+                        }
+                        //draw
+                        draw();
 
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                        try {
+                            Thread.sleep(400);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
             }
-        }
+        }).start();
     }
 
     public static void main(String[] args) {
         Snake dialog = new Snake();
         dialog.pack();
-        new Thread(dialog).start();
         System.exit(0);
     }
 }
